@@ -27,7 +27,9 @@ irm https://matyaspolidar-bot.github.io/meetily-watcher-installer-windows/instal
 Přesně toto je jediné, co je potřeba udělat. Instalace je idempotentní – je
 bezpečné příkaz spustit i vícekrát.
 
-**Poznámka (stav vývoje):** tenhle repo je zatím ve fázi kostry (viz
-README.md) - appka Meetily, Task Scheduler úlohy a automatické klikání na
-"Nahrávat" ještě nejsou hotové. Pokud instalace skončí dřív, než popisuje bod
-2 výše, je to očekávané - ne chyba.
+**Poznámka (stav vývoje):** tenhle repo je napsaný na feature-parity s Mac
+verzí, ale zatím NEOVĚŘENÝ na reálném Windows stroji (viz README.md "Stav").
+Nejpravděpodobnější místo pádu je krok s appkou Meetily a automatickým
+klikáním na "Nahrávat" - pokud tam instalace selže, je to očekávané riziko,
+ne důvod install.sh/CLAUDE.md pravidla obcházet. Nahlas uživateli přesně, na
+čem to spadlo, a odkaž na log.

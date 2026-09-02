@@ -133,3 +133,101 @@ function Stage-Venv {
     }
     Write-Info "whisperx-env: hotovo"
 }
+
+function Stage-MeetilyApp {
+    # ZATIM NEOVERENO na realnem stroji: presne umisteni/nazev nainstalovane
+    # appky zavisi na tom, jak MSI instaluje (per-user vs per-machine). Marker
+    # soubor misto kontroly Program Files, protoze tu cestu neznam predem.
+    $marker = Join-Path $Script:WhisperSetupDir ".meetily-app-installed"
+    if (Test-Path $marker) {
+        Write-Info "Meetily.app: uz nainstalovano"
+        return
+    }
+    $msiUrl = "https://github.com/Zackriya-Solutions/meetily/releases/download/v0.4.0/meetily_0.4.0_x64_en-US.msi"
+    $msiPath = Join-Path $env:TEMP "meetily_0.4.0_x64_en-US.msi"
+    Write-Info "Stahuji instalator Meetily..."
+    try {
+        Invoke-WebRequest -Uri $msiUrl -OutFile $msiPath
+    } catch {
+        Invoke-FailDialog "Stazeni instalatoru Meetily selhalo: $($_.Exception.Message)"
+    }
+    Write-Info "Instaluji Meetily (tise, bez oken)..."
+    $proc = Start-Process msiexec.exe -ArgumentList "/i `"$msiPath`" /quiet /qn /norestart" -Wait -PassThru
+    if ($proc.ExitCode -ne 0) {
+        Invoke-FailDialog "Instalace Meetily selhala (msiexec kod $($proc.ExitCode))."
+    }
+    Remove-Item $msiPath -ErrorAction SilentlyContinue
+    Set-Content -Path $marker -Value (Get-Date)
+    Write-Info "Meetily.app: nainstalovano automaticky (v0.4.0)"
+}
+
+function Stage-CopyPayloadScripts {
+    param([Parameter(Mandatory)][string]$PayloadDir)
+    $files = @(
+        "meetily_watcher.py", "meetily_autowatch.py", "export_transcript.py",
+        "apply_speaker_names.py", "meetily_launch_prompt.py",
+        "click_meetily_record.ps1", "transcribe_meeting.ps1"
+    )
+    foreach ($f in $files) {
+        Copy-Item -Path (Join-Path $PayloadDir $f) -Destination $Script:WhisperSetupDir -Force
+    }
+    Write-Info "Watcher skripty: zkopirovano"
+}
+
+function Stage-ScheduledTasks {
+    $python = (Get-Command python.exe -ErrorAction SilentlyContinue).Source
+    $pythonw = (Get-Command pythonw.exe -ErrorAction SilentlyContinue).Source
+    if (-not $python) {
+        Invoke-FailDialog "Nenasel jsem python.exe v PATH pro registraci uloh na pozadi."
+    }
+    if (-not $pythonw) { $pythonw = $python }
+
+    $watcherScript = Join-Path $Script:WhisperSetupDir "meetily_autowatch.py"
+    $promptScript = Join-Path $Script:WhisperSetupDir "meetily_launch_prompt.py"
+    $principal = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType Interactive
+
+    # Watcher - kontrola novych nahravek kazde 2 minuty (analogie StartInterval).
+    Unregister-ScheduledTask -TaskName "MeetilyWatcher" -Confirm:$false -ErrorAction SilentlyContinue
+    $watcherAction = New-ScheduledTaskAction -Execute $python -Argument "`"$watcherScript`""
+    $watcherTrigger = New-ScheduledTaskTrigger -Once -At (Get-Date) `
+        -RepetitionInterval (New-TimeSpan -Minutes 2) -RepetitionDuration ([TimeSpan]::MaxValue)
+    $watcherSettings = New-ScheduledTaskSettingsSet -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Minutes 30)
+    Register-ScheduledTask -TaskName "MeetilyWatcher" -Action $watcherAction -Trigger $watcherTrigger `
+        -Settings $watcherSettings -Principal $principal `
+        -Description "Meetily Watcher - kontrola novych nahravek" | Out-Null
+    Write-Info "Task Scheduler (MeetilyWatcher): nainstalovano a naplanovano"
+
+    # Launch-prompt - bezi porad na pozadi, restartuje se pri padu (analogie KeepAlive).
+    Unregister-ScheduledTask -TaskName "MeetilyLaunchPrompt" -Confirm:$false -ErrorAction SilentlyContinue
+    $promptAction = New-ScheduledTaskAction -Execute $pythonw -Argument "`"$promptScript`""
+    $promptTrigger = New-ScheduledTaskTrigger -AtLogOn
+    $promptSettings = New-ScheduledTaskSettingsSet -RestartCount 999 -RestartInterval (New-TimeSpan -Minutes 1) `
+        -ExecutionTimeLimit ([TimeSpan]::Zero)
+    Register-ScheduledTask -TaskName "MeetilyLaunchPrompt" -Action $promptAction -Trigger $promptTrigger `
+        -Settings $promptSettings -Principal $principal `
+        -Description "Meetily Watcher - dialog Chcete zacit nahravat?" | Out-Null
+    Start-ScheduledTask -TaskName "MeetilyLaunchPrompt"
+    Write-Info "Task Scheduler (MeetilyLaunchPrompt): nainstalovano a spusteno"
+}
+
+function Test-Verify {
+    # 30 pokusu/1s - poucka z Mac verze, kde 10s okno na overeni bezicniho
+    # procesu hlasilo falesnou chybu, kdyz naskok trval o neco dele.
+    $ok = $true
+    $pythonExe = Join-Path $Script:VenvDir "Scripts\python.exe"
+    & $pythonExe -c "import whisperx, faster_whisper" 2>$null
+    if ($LASTEXITCODE -ne 0) { Write-Warn "whisperx/faster-whisper se nedaji importovat"; $ok = $false }
+
+    $watcherTask = Get-ScheduledTask -TaskName "MeetilyWatcher" -ErrorAction SilentlyContinue
+    if (-not $watcherTask) { Write-Warn "uloha MeetilyWatcher neexistuje"; $ok = $false }
+
+    $promptRunning = $false
+    for ($i = 0; $i -lt 30; $i++) {
+        $promptTask = Get-ScheduledTask -TaskName "MeetilyLaunchPrompt" -ErrorAction SilentlyContinue
+        if ($promptTask -and $promptTask.State -eq "Running") { $promptRunning = $true; break }
+        Start-Sleep -Seconds 1
+    }
+    if (-not $promptRunning) { Write-Warn "hlidac dialogu pri zapnuti nebezi"; $ok = $false }
+
+    return $ok
+}
