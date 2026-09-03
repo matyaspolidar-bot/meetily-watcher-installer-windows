@@ -76,24 +76,29 @@ function Stage-Winget {
 }
 
 function Stage-Python {
-    if (Get-Command python -ErrorAction SilentlyContinue) {
-        $version = (& python --version 2>&1).ToString()
-        if ($version -match "3\.1[3-9]") {
-            Write-Info "Python ($version): uz nainstalovano"
+    # Cilime na 3.12, ne nejnovejsi verzi: ctranslate2==4.4.0 (tvrda zavislost
+    # whisperx) nema wheel pro Python 3.13 (zjisteno na realnem Windows testu -
+    # pip selhal na "Could not find a version that satisfies ctranslate2==4.4.0").
+    # 'py' launcher misto bare 'python' - obchazi konflikt PATH, kdyby na
+    # stroji uz byla nainstalovana i jina verze Pythonu.
+    if (Get-Command py -ErrorAction SilentlyContinue) {
+        & py -3.12 --version *> $null
+        if ($LASTEXITCODE -eq 0) {
+            Write-Info "Python 3.12: uz nainstalovano"
             return
         }
     }
-    Write-Info "Instaluji Python 3.13 pres winget..."
-    winget install --id Python.Python.3.13 --source winget --accept-package-agreements --accept-source-agreements --silent
+    Write-Info "Instaluji Python 3.12 pres winget..."
+    winget install --id Python.Python.3.12 --source winget --accept-package-agreements --accept-source-agreements --silent
     if ($LASTEXITCODE -ne 0) {
         Invoke-FailDialog "Instalace Pythonu pres winget selhala (kod $LASTEXITCODE)."
     }
     # winget po instalaci nerefreshne PATH v aktualnim procesu - dotahnout z registru.
     $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
-    if (-not (Get-Command python -ErrorAction SilentlyContinue)) {
-        Invoke-FailDialog "Python se nainstaloval, ale neni videt v PATH v tomhle okne. Zavri Terminal/PowerShell, otevri znovu a spust install.ps1 znovu."
+    if (-not (Get-Command py -ErrorAction SilentlyContinue)) {
+        Invoke-FailDialog "Python se nainstaloval, ale 'py' launcher neni videt v PATH v tomhle okne. Zavri Terminal/PowerShell, otevri znovu a spust install.ps1 znovu."
     }
-    Write-Info "Python 3.13: hotovo"
+    Write-Info "Python 3.12: hotovo"
 }
 
 function Stage-Ffmpeg {
@@ -128,7 +133,7 @@ function Stage-Venv {
         return
     }
     New-Item -ItemType Directory -Force -Path $Script:WhisperSetupDir | Out-Null
-    python -m venv $Script:VenvDir
+    py -3.12 -m venv $Script:VenvDir
     if ($LASTEXITCODE -ne 0) {
         Invoke-FailDialog "Vytvoreni venv selhalo."
     }
@@ -180,12 +185,15 @@ function Stage-CopyPayloadScripts {
 }
 
 function Stage-ScheduledTasks {
-    $python = (Get-Command python.exe -ErrorAction SilentlyContinue).Source
-    $pythonw = (Get-Command pythonw.exe -ErrorAction SilentlyContinue).Source
-    if (-not $python) {
-        Invoke-FailDialog "Nenasel jsem python.exe v PATH pro registraci uloh na pozadi."
+    # Absolutni cesta ke konkretni verzi (3.12) pres 'py' launcher, ne bare
+    # python.exe z PATH - stejny duvod jako u Stage-Venv, predvidatelnost bez
+    # ohledu na to, jestli je na stroji jeste jina verze Pythonu.
+    $python = (& py -3.12 -c "import sys; print(sys.executable)" 2>$null | Select-Object -Last 1).Trim()
+    if (-not $python -or -not (Test-Path $python)) {
+        Invoke-FailDialog "Nenasel jsem Python 3.12 pro registraci uloh na pozadi."
     }
-    if (-not $pythonw) { $pythonw = $python }
+    $pythonw = $python -replace "python\.exe$", "pythonw.exe"
+    if (-not (Test-Path $pythonw)) { $pythonw = $python }
 
     $watcherScript = Join-Path $Script:WhisperSetupDir "meetily_autowatch.py"
     $promptScript = Join-Path $Script:WhisperSetupDir "meetily_launch_prompt.py"

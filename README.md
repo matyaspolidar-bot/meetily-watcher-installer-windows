@@ -6,7 +6,16 @@ Sesterský repozitář k [`meetily-watcher-installer`](https://github.com/matyas
 nebo PowerShell příkaz z landing page jako záloha), ale Windows-nativní
 mechanismy místo macOS.
 
-## Stav: napsáno, NEOVĚŘENO na reálném Windows (v0.2.0)
+## Stav: probíhá reálné testování na Windows (v0.3.0)
+
+Poprvé spuštěno na reálném Windows stroji přes Claude Code (Path A) - dva
+nálezy zatím opravené:
+- Parse chyba v `stages.ps1` (`;` uvnitř `(...)` použitého jako operand
+  `-and` - PowerShell to nedovolí, potřeba `$(...)` nebo rozepsat na víc
+  příkazů).
+- `whisperx` vyžaduje přesně `ctranslate2==4.4.0`, který nemá wheel pro
+  Python 3.13 - cíl přepnut na Python 3.12 (přes `py -3.12` launcher, ne
+  bare `python` z PATH, kvůli riziku konfliktu s jinou nainstalovanou verzí).
 
 Celý flow je napsaný feature-parity s Mac verzí: `install.ps1` (admin práva,
 místo na disku, zámek proti souběžnému běhu), `winget` instalace Python +
@@ -16,9 +25,9 @@ port watcher skriptů (`meetily_watcher.py`, `meetily_autowatch.py`,
 `export_transcript.py`, `apply_speaker_names.py`, `meetily_launch_prompt.py`),
 registrace dvou úloh v Task Scheduleru (běh na pozadí).
 
-**Nic z tohohle ještě neběželo na skutečném Windows stroji.** Dva nejnejistější
-kusy, u kterých je reálné selhání nejpravděpodobnější a bude potřeba doladit
-naživo:
+Test zatím doběhl jen po instalaci Python/ffmpeg/venv - appka Meetily, Task
+Scheduler úlohy a klikání na "Nahrávat" ještě neproběhly na reálném stroji.
+Dva nejnejistější kusy, u kterých je další selhání nejpravděpodobnější:
 - `src/payload/click_meetily_record.ps1` - klikání na tlačítko "Nahrávat" přes
   Windows UI Automation (heuristika podle velikosti tlačítka, převzatá z Mac
   AppleScriptu - Windows struktura appky není ověřená).
@@ -35,7 +44,7 @@ Mac verze ještě chybí.
 |---|---|
 | bash | PowerShell |
 | `curl \| bash` | `irm <url>/install.ps1 \| iex` |
-| Homebrew | `winget install Python.Python.3.13`, `winget install Gyan.FFmpeg` |
+| Homebrew | `winget install Python.Python.3.12`, `winget install Gyan.FFmpeg` |
 | launchd (`StartInterval`/`KeepAlive`) | Task Scheduler (`Register-ScheduledTask`) |
 | `osascript display dialog` | `System.Windows.Forms.MessageBox` / `Microsoft.VisualBasic.Interaction.InputBox` |
 | `hdiutil` mount DMG | silent `.msi`/`.exe` install |
