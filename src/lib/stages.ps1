@@ -118,7 +118,12 @@ function Stage-Venv {
     # Apple Silicon) staci na Windows JEDEN venv - faster-whisper (na kterem
     # whisperx uz interne stavi) zvladne transkripci i diarizaci spolu.
     $pythonExe = Join-Path $Script:VenvDir "Scripts\python.exe"
-    if ((Test-Path $pythonExe) -and (& $pythonExe -c "import whisperx, faster_whisper" 2>$null; $LASTEXITCODE -eq 0)) {
+    $venvOk = $false
+    if (Test-Path $pythonExe) {
+        & $pythonExe -c "import whisperx, faster_whisper" 2>$null
+        $venvOk = ($LASTEXITCODE -eq 0)
+    }
+    if ($venvOk) {
         Write-Info "whisperx-env: uz existuje a funguje"
         return
     }
