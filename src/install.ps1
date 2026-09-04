@@ -1,6 +1,13 @@
 # Meetily Watcher (Windows) - konsolidovany instalator.
 # Analogie install.sh - spousti se z docs/install.ps1 (irm | iex).
 $ErrorActionPreference = "Stop"
+# PowerShell 7.3+ jinak automaticky hodi terminujici chybu pri nenulovem exit
+# kodu externiho prikazu (py/winget/pip/...) - cely skript ale pocita s
+# klasickym chovanim (kontrola $LASTEXITCODE rucne). Bez tohohle by kazde
+# ocekavane "zkontroluj a pripadne nainstaluj" selhalo hned na prvnim testu.
+if (Test-Path Variable:PSNativeCommandUseErrorActionPreference) {
+    $PSNativeCommandUseErrorActionPreference = $false
+}
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
