@@ -210,8 +210,12 @@ function Stage-ScheduledTasks {
     # Watcher - kontrola novych nahravek kazde 2 minuty (analogie StartInterval).
     Unregister-ScheduledTask -TaskName "MeetilyWatcher" -Confirm:$false -ErrorAction SilentlyContinue
     $watcherAction = New-ScheduledTaskAction -Execute $python -Argument "`"$watcherScript`""
+    # [TimeSpan]::MaxValue (~10 milionu dni) se serializuje do Task Scheduler
+    # XML jako P99999999DT23H59M59S, coz je mimo povoleny rozsah schematu
+    # (overeno na realnem Windows - presne tahle hodnota v chybe). 10 let
+    # je dost "navzdy" v praxi a bezpecne v rozsahu.
     $watcherTrigger = New-ScheduledTaskTrigger -Once -At (Get-Date) `
-        -RepetitionInterval (New-TimeSpan -Minutes 2) -RepetitionDuration ([TimeSpan]::MaxValue)
+        -RepetitionInterval (New-TimeSpan -Minutes 2) -RepetitionDuration (New-TimeSpan -Days 3650)
     $watcherSettings = New-ScheduledTaskSettingsSet -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Minutes 30)
     Register-ScheduledTask -TaskName "MeetilyWatcher" -Action $watcherAction -Trigger $watcherTrigger `
         -Settings $watcherSettings -Principal $principal `
