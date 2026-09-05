@@ -153,8 +153,16 @@ function Stage-MeetilyApp {
         Write-Info "Meetily.app: uz nainstalovano"
         return
     }
+    # Tauri appky (jako Meetily) potrebuji Edge WebView2 Runtime - na cerstvem
+    # Windows 10 nemusi byt predinstalovany (Windows 11 uz ho ma), a jeho
+    # chybeni je castou pricinou obecne msiexec chyby 1603. Winget vrati
+    # nenulovy kod, kdyz uz je nainstalovany - to je v poradku, ignorujeme.
+    Write-Info "Kontroluji Edge WebView2 Runtime..."
+    winget install --id Microsoft.EdgeWebView2Runtime --source winget --accept-package-agreements --accept-source-agreements --silent *> $null
+
     $msiUrl = "https://github.com/Zackriya-Solutions/meetily/releases/download/v0.4.0/meetily_0.4.0_x64_en-US.msi"
     $msiPath = Join-Path $env:TEMP "meetily_0.4.0_x64_en-US.msi"
+    $msiLog = Join-Path $Script:WhisperSetupDir "meetily-msi-install.log"
     Write-Info "Stahuji instalator Meetily..."
     try {
         Invoke-WebRequest -Uri $msiUrl -OutFile $msiPath
@@ -162,9 +170,9 @@ function Stage-MeetilyApp {
         Invoke-FailDialog "Stazeni instalatoru Meetily selhalo: $($_.Exception.Message)"
     }
     Write-Info "Instaluji Meetily (tise, bez oken)..."
-    $proc = Start-Process msiexec.exe -ArgumentList "/i `"$msiPath`" /quiet /qn /norestart" -Wait -PassThru
+    $proc = Start-Process msiexec.exe -ArgumentList "/i `"$msiPath`" /quiet /qn /norestart /l*v `"$msiLog`"" -Wait -PassThru
     if ($proc.ExitCode -ne 0) {
-        Invoke-FailDialog "Instalace Meetily selhala (msiexec kod $($proc.ExitCode))."
+        Invoke-FailDialog "Instalace Meetily selhala (msiexec kod $($proc.ExitCode)). Podrobny log: $msiLog"
     }
     Remove-Item $msiPath -ErrorAction SilentlyContinue
     Set-Content -Path $marker -Value (Get-Date)
