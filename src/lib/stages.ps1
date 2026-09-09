@@ -170,7 +170,13 @@ function Stage-MeetilyApp {
         Invoke-FailDialog "Stazeni instalatoru Meetily selhalo: $($_.Exception.Message)"
     }
     Write-Info "Instaluji Meetily (tise, bez oken)..."
-    $proc = Start-Process msiexec.exe -ArgumentList "/i `"$msiPath`" /quiet /qn /norestart /l*v `"$msiLog`"" -Wait -PassThru
+    # -Verb RunAs je tu nutne: Test-AdminGroupMembership propousti i ucet,
+    # ktery je jen clenem skupiny Administrators, ale nebezi elevovane. Tichy
+    # "/quiet /qn" msiexec bez explicitni elevace v tom pripade zadny UAC
+    # dialog nevyvola a proste selze (msiexec kod 1603) - overeno na realnem
+    # stroji 09/2026, kdy prvni (neelevovany) beh takhle padl a druhy
+    # (elevovany rucne) presel bez problemu.
+    $proc = Start-Process msiexec.exe -ArgumentList "/i `"$msiPath`" /quiet /qn /norestart /l*v `"$msiLog`"" -Verb RunAs -Wait -PassThru
     if ($proc.ExitCode -ne 0) {
         Invoke-FailDialog "Instalace Meetily selhala (msiexec kod $($proc.ExitCode)). Podrobny log: $msiLog"
     }

@@ -53,7 +53,13 @@ try {
             "Meetily Watcher - posledni krok",
             [System.Windows.Forms.MessageBoxButtons]::OK
         ) | Out-Null
-        Start-Process "meetily" -ErrorAction SilentlyContinue
+        try {
+            Start-Process (Join-Path ${env:ProgramFiles} "meetily\meetily.exe")
+        } catch {
+            # Start-Process hazi terminujici vyjimku i s -ErrorAction
+            # SilentlyContinue, kdyz nenajde soubor - autoopen appky je jen
+            # pohodlnost, neni duvod kvuli tomu hlasit selhani instalace.
+        }
     } else {
         Invoke-FailDialog "Instalace dobehla, ale kontrola na konci nasla problem - podivej se vys do logu."
     }

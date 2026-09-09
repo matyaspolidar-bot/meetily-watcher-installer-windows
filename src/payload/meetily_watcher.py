@@ -16,10 +16,23 @@ from pathlib import Path
 
 from export_transcript import export_transcript
 
-# Windows (Tauri konvence): %APPDATA%\<bundle-id>\... - ZATIM NEOVERENO na
-# reálné instalaci, jen odhad podle Tauri defaultů. Až appka poběží na
-# testovacím Windows stroji, zkontroluj skutečnou cestu a uprav.
-DB_PATH = Path(os.environ["APPDATA"]) / "com.meetily.ai" / "meeting_minutes.sqlite"
+def _resolve_db_path() -> Path:
+    """Overeno na realnem Windows stroji (09/2026): Meetily je nainstalovana
+    jako MSIX balicek, takze Windows jeji souborovy pristup presmeruje mimo
+    plain %APPDATA% do virtualizovane slozky pod
+    %LOCALAPPDATA%\\Packages\\<PackageFamilyName>\\LocalCache\\Roaming\\...
+    PackageFamilyName obsahuje nahodny hash-suffix ruzny pro kazdou instalaci,
+    takze cestu hledame dynamicky misto hardcodovani konkretni hodnoty."""
+    packages_dir = Path(os.environ["LOCALAPPDATA"]) / "Packages"
+    if packages_dir.is_dir():
+        matches = sorted(packages_dir.glob("*/LocalCache/Roaming/com.meetily.ai/meeting_minutes.sqlite"))
+        if matches:
+            return matches[0]
+    # Fallback na puvodni odhad (nebalena/non-MSIX instalace Meetily).
+    return Path(os.environ["APPDATA"]) / "com.meetily.ai" / "meeting_minutes.sqlite"
+
+
+DB_PATH = _resolve_db_path()
 SCRIPT_DIR = Path(__file__).resolve().parent
 TRANSCRIBE_SCRIPT = SCRIPT_DIR / "transcribe_meeting.ps1"
 # Mimo Meetily nahrávací složku - psaní souborů přímo do folder_path spustí

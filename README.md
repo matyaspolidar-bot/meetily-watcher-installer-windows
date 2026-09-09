@@ -8,14 +8,32 @@ mechanismy místo macOS.
 
 ## Stav: probíhá reálné testování na Windows (v0.3.0)
 
-Poprvé spuštěno na reálném Windows stroji přes Claude Code (Path A) - dva
-nálezy zatím opravené:
+Poprvé spuštěno na reálném Windows stroji přes Claude Code (Path A) - nálezy
+zatím opravené:
 - Parse chyba v `stages.ps1` (`;` uvnitř `(...)` použitého jako operand
   `-and` - PowerShell to nedovolí, potřeba `$(...)` nebo rozepsat na víc
   příkazů).
 - `whisperx` vyžaduje přesně `ctranslate2==4.4.0`, který nemá wheel pro
   Python 3.13 - cíl přepnut na Python 3.12 (přes `py -3.12` launcher, ne
   bare `python` z PATH, kvůli riziku konfliktu s jinou nainstalovanou verzí).
+- Tichá instalace appky Meetily (`msiexec /quiet /qn`) padala s kódem 1603,
+  když účet byl jen členem skupiny Administrators, ale neběžel skutečně
+  elevovaně - `Test-AdminGroupMembership` takový účet propustí (má UAC řešit
+  sám za jednotlivé kroky), ale `msiexec` bez `-Verb RunAs` v tichém režimu
+  žádný UAC dialog nevyvolá a prostě selže. Oprava: `Start-Process msiexec.exe`
+  teď v `stages.ps1` běží s `-Verb RunAs`.
+- `DB_PATH` v `meetily_watcher.py` (odhad `%APPDATA%\com.meetily.ai\...` podle
+  Tauri konvence) byl špatně - appka je nainstalovaná jako MSIX balíček, takže
+  Windows její soubory virtualizuje do
+  `%LOCALAPPDATA%\Packages\<PackageFamilyName>\LocalCache\Roaming\com.meetily.ai\...`.
+  `PackageFamilyName` má náhodný hash-suffix různý pro každou instalaci, takže
+  `meetily_watcher.py` teď cestu hledá dynamicky (glob přes `Packages/*/...`)
+  místo hardcodované hodnoty; MeetilyWatcher scheduled task kvůli tomu padal
+  na každém běhu (`sqlite3.OperationalError: unable to open database file`).
+- Po úspěšné instalaci appky padal `Start-Process "meetily"` (bare příkaz
+  není na PATH) terminující výjimkou i přes `-ErrorAction SilentlyContinue`
+  (`Start-Process` tohle ignoruje u file-not-found) - opraveno na plnou cestu
+  `$env:ProgramFiles\meetily\meetily.exe` obalenou v try/catch.
 
 Celý flow je napsaný feature-parity s Mac verzí: `install.ps1` (admin práva,
 místo na disku, zámek proti souběžnému běhu), `winget` instalace Python +
@@ -25,14 +43,15 @@ port watcher skriptů (`meetily_watcher.py`, `meetily_autowatch.py`,
 `export_transcript.py`, `apply_speaker_names.py`, `meetily_launch_prompt.py`),
 registrace dvou úloh v Task Scheduleru (běh na pozadí).
 
-Test zatím doběhl jen po instalaci Python/ffmpeg/venv - appka Meetily, Task
-Scheduler úlohy a klikání na "Nahrávat" ještě neproběhly na reálném stroji.
-Dva nejnejistější kusy, u kterých je další selhání nejpravděpodobnější:
+Test doběhl až po instalaci appky Meetily a registraci obou Task Scheduler
+úloh (po opravě elevace výše). `DB_PATH` je teď ověřený proti reálné databázi.
+Zbývá neověřené:
 - `src/payload/click_meetily_record.ps1` - klikání na tlačítko "Nahrávat" přes
   Windows UI Automation (heuristika podle velikosti tlačítka, převzatá z Mac
   AppleScriptu - Windows struktura appky není ověřená).
-- `DB_PATH` v `meetily_watcher.py` (`%APPDATA%\com.meetily.ai\...`) - odhad
-  podle Tauri konvence, skutečná cesta se musí zkontrolovat po instalaci appky.
+- Celý end-to-end běh watcher pipeline na skutečné nahrávce (přepis +
+  diarizace + zápis zpět do Meetily databáze) - zatím otestováno jen to, že
+  scheduled task dojede bez pádu na prázdné DB, ne na reálné nahrávce.
 
 Landing page (`docs/index.html`) je zatím jen prázdná kostra bez instrukcí -
 Path A funguje už teď přes `CLAUDE.md`, ale plnohodnotná stránka podle vzoru
