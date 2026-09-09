@@ -54,10 +54,12 @@ Scheduleru (běh na pozadí).
 
 Test doběhl až po instalaci appky Meetily a registraci Task Scheduler úlohy
 (po opravě elevace výše). `DB_PATH` je teď ověřený proti reálné databázi.
-Zbývá neověřené:
-- Celý end-to-end běh watcher pipeline na skutečné nahrávce (přepis +
-  diarizace + zápis zpět do Meetily databáze) - zatím otestováno jen to, že
-  scheduled task dojede bez pádu na prázdné DB, ne na reálné nahrávce.
+
+Celý end-to-end běh watcher pipeline je od 09/2026 ověřený na skutečné
+nahrávce: nahráno v appce Meetily → `MeetilyWatcher` zachytí dokončenou
+nahrávku → přepis (`faster-whisper`) → rozpoznání mluvčích (`pyannote`) →
+zápis zpět do Meetily databáze (`transcripts` tabulka) → export do sdílené
+složky. Všechno proběhlo bez chyby na reálné češtině.
 
 Dialog "Chcete začít nahrávat?" (`meetily_launch_prompt.py` +
 `click_meetily_record.ps1`, automatické klikání na tlačítko Nahrávat) byl
