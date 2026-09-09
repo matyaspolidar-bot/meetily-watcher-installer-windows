@@ -26,6 +26,22 @@ def load_speaker_map(meeting_id: str) -> dict[str, str]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def attendee_suggestions_path(meeting_id: str) -> Path:
+    return STATE_DIR / f"{meeting_id}_ucastnici_navrh.txt"
+
+
+def write_attendee_suggestions(meeting_id: str, attendees: list[str]) -> None:
+    """Cistě informativni seznam (z kalendare, viz teams_attendees.py) -
+    NEOVLIVNUJE _speakers.json ani apply_speaker_names.py, jen usnadnuje
+    rucni vyplneni jmen - vime, kdo byl pozvany, ne kdo presne mluvil."""
+    if not attendees:
+        return
+    path = attendee_suggestions_path(meeting_id)
+    STATE_DIR.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(attendees), encoding="utf-8")
+    print(f"-> Navrh jmen z kalendare (kdo byl na schuzku pozvany): {path}")
+
+
 def ensure_speaker_map_template(meeting_id: str, segments: list[dict]) -> None:
     """Pokud mapování jmen ještě neexistuje, založí prázdnou šablonu se
     všemi labely mluvčích nalezenými v přepisu, ať ji jde rovnou vyplnit."""
@@ -48,8 +64,9 @@ def render_transcript_md(title: str, meeting_id: str, segments: list[dict], spea
     return "\n\n".join(lines)
 
 
-def export_transcript(meeting_id: str, title: str, segments: list[dict]) -> Path:
+def export_transcript(meeting_id: str, title: str, segments: list[dict], attendees: list[str] | None = None) -> Path:
     ensure_speaker_map_template(meeting_id, segments)
+    write_attendee_suggestions(meeting_id, attendees or [])
     speaker_map = load_speaker_map(meeting_id)
     SHARED_DIR.mkdir(parents=True, exist_ok=True)
     out_path = SHARED_DIR / f"{title}_{meeting_id}.md"

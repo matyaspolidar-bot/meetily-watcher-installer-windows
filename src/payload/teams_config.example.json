@@ -1,0 +1,7 @@
+{
+  "_navod": "Zkopiruj tenhle soubor jako teams_config.json (bez .example) do stejne slozky (whisper-setup) a vypln hodnoty od IT. Bez teams_config.json se navrh ucastniku ze schuzek jen preskoci - nic se nerozbije.",
+  "tenant_id": "",
+  "client_id": "",
+  "client_secret": "",
+  "calendar_user": ""
+}

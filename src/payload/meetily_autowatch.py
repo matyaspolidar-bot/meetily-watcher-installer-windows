@@ -22,6 +22,7 @@ from meetily_watcher import (  # noqa: E402
     resolve_audio_path,
     run_pipeline,
 )
+from teams_attendees import get_meeting_attendees  # noqa: E402
 
 LOCK_PATH = SCRIPT_DIR / ".autowatch.lock"
 
@@ -51,8 +52,23 @@ def process_meeting(conn: sqlite3.Connection, meeting_id: str, title: str, folde
     out_json = diarized_output_path(meeting_id)
     segments = run_pipeline(audio_path, out_json)
     replace_transcript(conn, meeting_id, segments)
-    export_transcript(meeting_id, title, segments)
+    attendees = _lookup_attendees(folder_path)
+    export_transcript(meeting_id, title, segments, attendees=attendees)
     print(f"[{meeting_id}] hotovo, {len(segments)} segmentu se jmeny mluvcich.")
+
+
+def _lookup_attendees(folder_path: str) -> list[str]:
+    """Nepovinny navrh jmen z firemniho kalendare (viz teams_attendees.py) -
+    kdykoliv selze (chybejici konfigurace, sit, cokoliv), vrati prazdny
+    seznam a zpracovani nahravky pokracuje normalne dal."""
+    meta_path = Path(folder_path) / "metadata.json"
+    if not meta_path.exists():
+        return []
+    try:
+        meta = json.loads(meta_path.read_text(encoding="utf-8"))
+        return get_meeting_attendees(meta["created_at"], meta["duration_seconds"])
+    except Exception:  # noqa: BLE001 - navrh jmen je jen pomocny, nesmi shodit zpracovani
+        return []
 
 
 def main() -> None:

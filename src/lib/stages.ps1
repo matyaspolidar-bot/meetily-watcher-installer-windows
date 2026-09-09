@@ -137,7 +137,7 @@ function Stage-Venv {
     if ($LASTEXITCODE -ne 0) {
         Invoke-FailDialog "Vytvoreni venv selhalo."
     }
-    & $pythonExe -m pip install --quiet --upgrade pip whisperx pyannote-audio faster-whisper
+    & $pythonExe -m pip install --quiet --upgrade pip whisperx pyannote-audio faster-whisper msal requests
     if ($LASTEXITCODE -ne 0) {
         Invoke-FailDialog "Instalace whisperx/pyannote-audio/faster-whisper selhala."
     }
@@ -189,10 +189,15 @@ function Stage-CopyPayloadScripts {
     param([Parameter(Mandatory)][string]$PayloadDir)
     $files = @(
         "meetily_watcher.py", "meetily_autowatch.py", "export_transcript.py",
-        "apply_speaker_names.py", "transcribe_meeting.ps1"
+        "apply_speaker_names.py", "transcribe_meeting.ps1", "teams_attendees.py"
     )
     foreach ($f in $files) {
         Copy-Item -Path (Join-Path $PayloadDir $f) -Destination $Script:WhisperSetupDir -Force
+    }
+    # teams_config.json (skutecne udaje) se nikdy nepretiruje pri opakovane
+    # instalaci - jen nakopirujeme .example sablonu, pokud tam realny config jeste neni.
+    if (-not (Test-Path (Join-Path $Script:WhisperSetupDir "teams_config.json"))) {
+        Copy-Item -Path (Join-Path $PayloadDir "teams_config.example.json") -Destination $Script:WhisperSetupDir -Force
     }
     Write-Info "Watcher skripty: zkopirovano"
 }

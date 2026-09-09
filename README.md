@@ -84,6 +84,31 @@ internetu (Mark of the Web) tiše zabila, instalace skončila okamžitě s
 místo toho stahují bootstrap skript do souboru a spouští ho přes `&`/`-File`
 - funkčně stejné, jen to nevypadá jako živý download-cradle řetězec.
 
+## Návrh jmen účastníků z firemního kalendáře (nepovinné)
+
+`teams_attendees.py` umí po zpracování nahrávky navrhnout jména podle toho,
+kdo byl pozvaný na kalendářovou událost, která se časově kryje s nahrávkou -
+místo prázdné šablony na jméno mluvčího (`_speakers.json`) dostaneš i soubor
+`_ucastnici_navrh.txt` se skutečným seznamem pozvaných. **Nepozná, kdo z nich
+zrovna mluvil** (diarizace zůstává `SPEAKER_00`/`01`/...) - jen usnadní ruční
+vyplnění `_speakers.json` (viz `apply_speaker_names.py`), místo vymýšlení
+jména z hlavy.
+
+Bez konfigurace se tahle část potichu přeskočí - nic se nerozbije. Zapnutí
+vyžaduje jednorázový zásah IT/administrátora Addvery v Azure AD:
+
+1. Azure Portal → Azure Active Directory → App registrations → New registration
+   (stačí libovolný název, např. "Meetily Watcher - kalendář").
+2. API permissions → Add a permission → Microsoft Graph → Application permissions
+   → Calendars → `Calendars.Read` → Add permissions → **Grant admin consent**.
+3. Certificates & secrets → New client secret → zkopírovat hodnotu (je vidět jen jednou).
+4. Předat: Tenant ID, Application (client) ID, hodnotu client secretu.
+
+Tyhle tři hodnoty se vyplní do `%USERPROFILE%\whisper-setup\teams_config.json`
+(zkopírovat z `teams_config.example.json` ve stejné složce). `calendar_user`
+lze nechat prázdné - odvodí se automaticky z přihlášeného Windows účtu
+(`whoami /upn`), případně přepsat konkrétním e-mailem.
+
 ## Mapování mechanismů (Mac → Windows)
 
 | Mac | Windows |
@@ -116,6 +141,8 @@ src/payload/meetily_autowatch.py          # periodická kontrola nových nahráv
 src/payload/export_transcript.py          # export do sdílené složky + mapování jmen mluvčích
 src/payload/apply_speaker_names.py        # aplikuje ručně vyplněná jména mluvčích
 src/payload/transcribe_meeting.ps1        # diarizace + přepis jednoho audio souboru
+src/payload/teams_attendees.py            # nepovinny navrh jmen z kalendare (Microsoft Graph)
+src/payload/teams_config.example.json     # sablona konfigurace pro teams_attendees.py
 ```
 
 ## Poznámka k diakritice

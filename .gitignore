@@ -1,1 +1,6 @@
 .remember/
+
+# skutecny Azure/Graph config se skutecnymi tajemstvimi - nikdy nepushovat,
+# jen teams_config.example.json (sablona bez hodnot) patri do repozitare
+src/payload/teams_config.json
+
