@@ -45,7 +45,7 @@ def main() -> None:
     out_json = diarized_output_path(meeting_id)
     if not out_json.exists():
         raise SystemExit(f"Diarizovaný přepis nenalezen: {out_json}")
-    segments = json.loads(out_json.read_text())
+    segments = json.loads(out_json.read_text(encoding="utf-8"))
 
     conn = sqlite3.connect(DB_PATH)
     _, title, _ = get_meeting(conn, meeting_id)

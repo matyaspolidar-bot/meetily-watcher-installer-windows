@@ -31,7 +31,7 @@ def is_completed(folder_path: str) -> bool:
     if not meta.exists():
         return False
     try:
-        return json.loads(meta.read_text()).get("status") == "completed"
+        return json.loads(meta.read_text(encoding="utf-8")).get("status") == "completed"
     except (json.JSONDecodeError, OSError):
         return False
 

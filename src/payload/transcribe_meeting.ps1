@@ -50,7 +50,7 @@ for r in records:
     else:
         merged.append(dict(r))
 
-json.dump(merged, open(out, 'w'), ensure_ascii=False)
+json.dump(merged, open(out, 'w', encoding='utf-8'), ensure_ascii=False)
 '@ | Set-Content -Path $diarizeScript -Encoding UTF8
 
     & $Py $diarizeScript $Audio $diarizationJson
@@ -70,7 +70,7 @@ from faster_whisper import WhisperModel
 END_PADDING_SECONDS = 0.3  # diarizacni hranice nekdy urizne posledni slovo vety
 
 audio_path, diar_path, out_path = sys.argv[1], sys.argv[2], sys.argv[3]
-segments_in = json.load(open(diar_path))
+segments_in = json.load(open(diar_path, encoding='utf-8'))
 
 model = WhisperModel("large-v3", device="cpu", compute_type="int8")
 
@@ -96,7 +96,7 @@ with tempfile.TemporaryDirectory() as tmpdir:
                 'language': info.language,
             })
 
-json.dump(merged_out, open(out_path, 'w'), ensure_ascii=False, indent=2)
+json.dump(merged_out, open(out_path, 'w', encoding='utf-8'), ensure_ascii=False, indent=2)
 
 lines = []
 last_speaker = None

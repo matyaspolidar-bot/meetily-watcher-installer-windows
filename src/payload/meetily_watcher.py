@@ -68,7 +68,7 @@ def resolve_audio_path(folder_path: str) -> Path:
     metadata_path = folder / "metadata.json"
     if metadata_path.exists():
         try:
-            audio_file = json.loads(metadata_path.read_text()).get("audio_file")
+            audio_file = json.loads(metadata_path.read_text(encoding="utf-8")).get("audio_file")
             if audio_file and (folder / audio_file).exists():
                 return folder / audio_file
         except (json.JSONDecodeError, OSError):
@@ -90,7 +90,7 @@ def backup_existing_transcript(conn, meeting_id, folder_path):
     backup = [dict(zip(cols, r)) for r in rows]
     STATE_DIR.mkdir(parents=True, exist_ok=True)
     backup_path = STATE_DIR / f"{meeting_id}_original_backup.json"
-    backup_path.write_text(json.dumps(backup, ensure_ascii=False, indent=2))
+    backup_path.write_text(json.dumps(backup, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"-> Puvodni transkript zazalohovan do: {backup_path}")
     return len(backup)
 
@@ -101,7 +101,7 @@ def run_pipeline(audio_path, out_json):
          str(TRANSCRIBE_SCRIPT), str(audio_path), str(out_json)],
         check=True,
     )
-    return json.loads(out_json.read_text())
+    return json.loads(out_json.read_text(encoding="utf-8"))
 
 
 def replace_transcript(conn, meeting_id, segments):

@@ -23,7 +23,7 @@ def load_speaker_map(meeting_id: str) -> dict[str, str]:
     path = speaker_map_path(meeting_id)
     if not path.exists():
         return {}
-    return json.loads(path.read_text())
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def ensure_speaker_map_template(meeting_id: str, segments: list[dict]) -> None:
@@ -35,7 +35,7 @@ def ensure_speaker_map_template(meeting_id: str, segments: list[dict]) -> None:
     labels = sorted({seg["speaker"] for seg in segments})
     template = {label: "" for label in labels}
     STATE_DIR.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(template, ensure_ascii=False, indent=2))
+    path.write_text(json.dumps(template, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"-> Sablona pro jmena mluvcich: {path}")
     print("   Vyplň jména a spusť: python apply_speaker_names.py " + meeting_id)
 
@@ -53,6 +53,6 @@ def export_transcript(meeting_id: str, title: str, segments: list[dict]) -> Path
     speaker_map = load_speaker_map(meeting_id)
     SHARED_DIR.mkdir(parents=True, exist_ok=True)
     out_path = SHARED_DIR / f"{title}_{meeting_id}.md"
-    out_path.write_text(render_transcript_md(title, meeting_id, segments, speaker_map))
+    out_path.write_text(render_transcript_md(title, meeting_id, segments, speaker_map), encoding="utf-8")
     print(f"-> Prepis ulozen do sdilene slozky: {out_path}")
     return out_path
