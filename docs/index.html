@@ -60,18 +60,28 @@ footer{margin-top:3rem;padding-top:1.6rem;border-top:1px solid var(--line);color
   <p class="sub">Automatický přepis a diarizace schůzek (Whisper + rozpoznání mluvčích) běžící na pozadí. Instalace jedním příkazem. Hledáš Mac verzi? <a href="https://matyaspolidar-bot.github.io/meetily-watcher-installer/">Je tady</a>.</p>
 
   <h2>1. Stáhni instalátor a spusť ho (dvojklik)</h2>
-  <p>Jeden soubor, žádné kopírování příkazů. Stáhni si ho a poklikej na něj.</p>
+  <p>Jeden soubor, žádné kopírování příkazů.</p>
 
-  <p><a class="dl-btn" href="Nainstalovat-Meetily.bat" download>⬇ Stáhnout Nainstalovat-Meetily.bat</a></p>
+  <p><a class="dl-btn" href="Nainstalovat-Meetily.zip" download>⬇ Stáhnout Nainstalovat-Meetily.zip</a></p>
 
   <ol>
-    <li>Otevři soubor ze složky Stažené soubory (dvojklik).</li>
-    <li>Prohlížeč nebo Windows se může zeptat, jestli si tímhle souborem jsi jistý ("Soubor může poškodit počítač" / "Windows chránil váš počítač") - klikni <b>Zachovat</b> / <b>Ponechat</b>, případně <b>Další informace → Přesto spustit</b>. Je to očekávané u každého staženého skriptu, ne jen u tohohle.</li>
+    <li>Otevři soubor ze složky Stažené soubory (dvojklik na <code class="inline">Nainstalovat-Meetily.zip</code>).</li>
+    <li>Klikni pravým tlačítkem na soubor uvnitř a vyber <b>Extrahovat vše</b> (Extract All), pak <b>Extrahovat</b>. Otevře se nová složka se souborem <code class="inline">Nainstalovat-Meetily.bat</code>.</li>
+    <li>Poklikej na ten <code class="inline">.bat</code> soubor v nově otevřené složce.</li>
+    <li>Windows se zeptá, jestli si opravdu chceš tenhle soubor spustit ("Neznámý vydavatel" / "Open File - Security Warning") - klikni <b>Spustit</b> / <b>Run</b>. Tohle okno se objeví u úplně každého souboru staženého z internetu, není to specifické pro tenhle instalátor.</li>
     <li>Objeví se okno Windows s dotazem na oprávnění správce - klikni <b>Ano</b>.</li>
     <li>Otevře se černé okno a hned po něm uvítací okno s instrukcemi - to už tě instalace vede sama krok za krokem.</li>
   </ol>
 
-  <div class="note">Nefunguje stažení/spuštění .bat souboru (firemní zásady, antivirus)? Použij některou z alternativ níže.</div>
+  <div class="note">Nefunguje stažení/rozbalení ZIP souboru (firemní zásady, antivirus)? Použij některou z alternativ níže.</div>
+
+  <h2>Časté otázky k bezpečnostním varováním</h2>
+  <p><b>Proč se mi zobrazuje varování, že soubor může poškodit počítač / neznámý vydavatel?</b><br>
+  Protože je to skript stažený z internetu a nikdo si ho (zatím) nekoupil digitální podpis, který stojí peníze. Stejné varování by se objevilo u jakéhokoliv jiného skriptu odkudkoliv - neznamená to, že je něco špatně. ZIP formát navíc obchází nejagresivnější variantu tohoto varování v prohlížeči (Chrome/Edge), zůstává jen mírnější potvrzovací okno přímo od Windows při spuštění <code class="inline">.bat</code> souboru.</p>
+  <p><b>Je bezpečné kliknout na "Spustit i tak" / "Ponechat"?</b><br>
+  Ano - obsah instalátoru je veřejně vidět v <a href="https://github.com/matyaspolidar-bot/meetily-watcher-installer-windows">tomhle repozitáři</a>, nic se neděje skrytě. Pokud si nejsi jistý/á, zeptej se Matyáše, než cokoliv spustíš.</p>
+  <p><b>Dostal jsem to přes Slack, ne přes tenhle web - je to jinak?</b><br>
+  Ne, princip je stejný. Soubor stažený odkudkoliv z internetu (Slack, e-mail, tahle stránka) dostane od Windows stejné "neznámý vydavatel" varování při prvním spuštění - to je vlastnost Windows, ne konkrétního kanálu.</p>
 
   <h2>Alternativa A: Pošli odkaz Claude (vyžadován funkční Claude Code)</h2>
   <p>Máš spuštěný Claude Code (s přístupem k terminálu na tomhle PC)? Zkopíruj zprávu níže a pošli mu ji přesně tak, jak je - repo obsahuje instrukce, které si Claude sám přečte a instalaci spustí za tebe.</p>
