@@ -53,9 +53,15 @@ Zbývá neověřené:
   diarizace + zápis zpět do Meetily databáze) - zatím otestováno jen to, že
   scheduled task dojede bez pádu na prázdné DB, ne na reálné nahrávce.
 
-Landing page (`docs/index.html`) je zatím jen prázdná kostra bez instrukcí -
-Path A funguje už teď přes `CLAUDE.md`, ale plnohodnotná stránka podle vzoru
-Mac verze ještě chybí.
+Landing page (`docs/index.html`) má tři cesty instalace: dvojklik na
+`docs/Nainstalovat-Meetily.zip` (primární, doporučená pro netechnické
+uživatele - `.bat` uvnitř se sám povýší na správce přes UAC a spustí
+bootstrap), Path A přes `CLAUDE.md` (poslat odkaz Claude Code), nebo ruční
+PowerShell příkaz (`irm ... | iex`). Distribuce jako `.zip` místo holého
+`.bat` obchází Chrome/Edge varování "tento typ souboru může poškodit
+počítač" (to je čistě podle přípony souboru) - zůstává jen mírnější Windows
+dialog "Neznámý vydavatel" při spuštění, který se objevuje u každého
+staženého skriptu bez placeného code-signing certifikátu.
 
 ## Mapování mechanismů (Mac → Windows)
 
@@ -77,6 +83,9 @@ Mac verze ještě chybí.
 ## Struktura
 
 ```
+docs/index.html                           # landing page - stažení + navod + FAQ k varovanim
+docs/Nainstalovat-Meetily.zip             # .bat zabaleny v zipu (distribuce pro netechnicke uzivatele)
+docs/Nainstalovat-Meetily.bat             # dvojklik instalator - sam se povysi na spravce (UAC) a spusti bootstrap
 docs/install.ps1                          # bootstrap - stáhne + rozbalí + spustí install.ps1
 src/install.ps1                           # entrypoint
 src/lib/gui.ps1                           # dialogy (WinForms/VisualBasic)
