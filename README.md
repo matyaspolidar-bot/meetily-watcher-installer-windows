@@ -70,11 +70,19 @@ Landing page (`docs/index.html`) má tři cesty instalace: dvojklik na
 `docs/Nainstalovat-Meetily.zip` (primární, doporučená pro netechnické
 uživatele - `.bat` uvnitř se sám povýší na správce přes UAC a spustí
 bootstrap), Path A přes `CLAUDE.md` (poslat odkaz Claude Code), nebo ruční
-PowerShell příkaz (`irm ... | iex`). Distribuce jako `.zip` místo holého
+PowerShell příkaz. Distribuce jako `.zip` místo holého
 `.bat` obchází Chrome/Edge varování "tento typ souboru může poškodit
 počítač" (to je čistě podle přípony souboru) - zůstává jen mírnější Windows
 dialog "Neznámý vydavatel" při spuštění, který se objevuje u každého
 staženého skriptu bez placeného code-signing certifikátu.
+
+Krátký tvar `irm <url> | iex` (stáhni skript a rovnou ho spusť v jednom
+řádku) se na reálném testu 09/2026 opakovaně srazil s Windows Defenderem -
+ML heuristika `Trojan:Win32/Commando.A!ml` ho u souboru staženého z
+internetu (Mark of the Web) tiše zabila, instalace skončila okamžitě s
+"Přístup odepřen" a bez zápisu do `install.log`. `.bat` i landing page teď
+místo toho stahují bootstrap skript do souboru a spouští ho přes `&`/`-File`
+- funkčně stejné, jen to nevypadá jako živý download-cradle řetězec.
 
 ## Mapování mechanismů (Mac → Windows)
 

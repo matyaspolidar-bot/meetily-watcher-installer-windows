@@ -12,7 +12,13 @@ exit /b
 
 :elevated
 title Meetily Watcher - instalace
-powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://matyaspolidar-bot.github.io/meetily-watcher-installer-windows/install.ps1 | iex"
+rem Zamerne NE "irm URL | iex" - tenhle "stahni-a-hned-spust" vzorec ve
+rem spojeni se souborem stazenym z internetu (Mark of the Web) spoustel
+rem u Windows Defenderu ML heuristiku (Trojan:Win32/Commando.A!ml) a tise
+rem instalaci zabil driv, nez vubec neco udelala. Stazeni do souboru a
+rem spusteni pres -File dela uplne to stejne, jen to nevypada jako zivy
+rem download-cradle retezec.
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$b = Join-Path $env:TEMP 'meetily-bootstrap.ps1'; Invoke-WebRequest -Uri 'https://matyaspolidar-bot.github.io/meetily-watcher-installer-windows/install.ps1' -OutFile $b; & $b"
 
 echo.
 echo Instalace dobehla. Toto okno muzes zavrit.

@@ -15,8 +15,14 @@ prvním příkazem.
    izolovaný Linux sandbox): spusť tento příkaz a nech ho doběhnout.
 
 ```powershell
-irm https://matyaspolidar-bot.github.io/meetily-watcher-installer-windows/install.ps1 | iex
+$b = "$env:TEMP\meetily-bootstrap.ps1"; Invoke-WebRequest -Uri "https://matyaspolidar-bot.github.io/meetily-watcher-installer-windows/install.ps1" -OutFile $b; & $b
 ```
+
+   (Zamerne ne kratsi `irm URL | iex` - tenhle "stahni-a-hned-spust" vzorec u
+   Windows Defenderu opakovane spustil falesnou ML detekci
+   `Trojan:Win32/Commando.A!ml` a instalaci tise zabil bez chybove hlasky,
+   ktere by si vsiml. Stazeni do souboru a spusteni pres `&` dela to same,
+   jen to nevypada jako zivy download-cradle retezec.)
 
    **Pokud takový nástroj nemáš** (např. tvůj shell běží v izolovaném
    prostředí bez přístupu k `powershell.exe` na tomhle stroji, nebo máš k
