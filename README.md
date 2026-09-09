@@ -37,6 +37,12 @@ zatím opravené:
   není na PATH) terminující výjimkou i přes `-ErrorAction SilentlyContinue`
   (`Start-Process` tohle ignoruje u file-not-found) - opraveno na plnou cestu
   `$env:ProgramFiles\meetily\meetily.exe` obalenou v try/catch.
+- Tenhle automatický autoopen appku spouštěl s právy správce (dědil je po
+  celém elevovaném `install.ps1`) - uživatel pak nemohl appku normálně
+  zavřít/ovládat z neelevovaného okna (Windows neposílá UI zprávy z nižší
+  do vyšší integrity úrovně). Opraveno spuštěním přes `explorer.exe`, který
+  vždy běží s právy přihlášeného uživatele bez ohledu na to, odkud je
+  zavolaný - stejné jako běžný dvojklik na ikonu appky.
 
 Celý flow je napsaný feature-parity s Mac verzí: `install.ps1` (admin práva,
 místo na disku, zámek proti souběžnému běhu), `winget` instalace Python +

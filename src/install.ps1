@@ -54,7 +54,14 @@ try {
             [System.Windows.Forms.MessageBoxButtons]::OK
         ) | Out-Null
         try {
-            Start-Process (Join-Path ${env:ProgramFiles} "meetily\meetily.exe")
+            # Cely install.ps1 bezi elevovane, takze primy Start-Process by
+            # appku spustil s pravy spravce (a pak by ji sel uzivatel v
+            # normalnim, neelevovanem okne tezko zavrit/ovladat - Windows
+            # neposila UI zpravy z nizsi do vyssi integrity urovne). Spusteni
+            # pres explorer.exe (bezi vzdy s pravy prihlaseneho uzivatele,
+            # ne s pravy tohohle skriptu) appku "deelevuje" - presne to, co
+            # by se stalo pri normalnim dvojkliku na ikonu appky.
+            Start-Process "explorer.exe" -ArgumentList "`"$(Join-Path ${env:ProgramFiles} 'meetily\meetily.exe')`""
         } catch {
             # Start-Process hazi terminujici vyjimku i s -ErrorAction
             # SilentlyContinue, kdyz nenajde soubor - autoopen appky je jen
