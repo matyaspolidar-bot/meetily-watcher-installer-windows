@@ -18,21 +18,28 @@ from export_transcript import export_transcript
 
 def _resolve_db_path() -> Path:
     """Na realnych Windows strojich (opakovane overeno 09/2026, vcetne
-    cerstve instalace) Meetily bezi jako klasicka (non-MSIX) appka a
-    databaze je na obycejne ceste %APPDATA%\\com.meetily.ai\\... - proto je
-    tenhle fallback druhy radek, ne prvni. Puvodne se cekalo, ze appka pobezi
-    jako MSIX balicek (Windows by pak soubory virtualizoval do
-    %LOCALAPPDATA%\\Packages\\<PackageFamilyName>\\LocalCache\\Roaming\\...) -
-    to se na zadnem testovanem stroji zatim nepotvrdilo, ale kontrola
-    zustava pro pripad jineho zpusobu instalace/budouci verze appky.
-    PackageFamilyName ma nahodny hash-suffix ruzny pro kazdou instalaci,
-    takze cestu hledame dynamicky misto hardcodovani konkretni hodnoty."""
+    cerstve instalace a realne nahravky) Meetily bezi jako klasicka
+    (non-MSIX) appka a databaze je na obycejne ceste
+    %APPDATA%\\com.meetily.ai\\..., proto se zkousi prvni.
+
+    Puvodne se tahle funkce ptala nejdriv na MSIX variantu
+    (%LOCALAPPDATA%\\Packages\\<PackageFamilyName>\\LocalCache\\Roaming\\...) -
+    ukazalo se to jako chyba: kdyz tenhle skript spusti proces bezici pod
+    jinou zabalenou (MSIX/AppContainer) appkou, Windows dokaze pro pristup na
+    "%APPDATA%\\com.meetily.ai\\..." tise vytvorit prazdnou virtualizovanou
+    kopii uvnitr Packages slozky TE JINE appky - glob ji pak nasel jako prvni
+    shodu a watcher tak "videl" prazdnou DB misto te skutecne s nahravkami.
+    Klasicka cesta ted jde prvni; MSIX glob zustava jen jako zalozni varianta
+    pro pripad, ze by budouci verze Meetily doopravdy bezela jako MSIX."""
+    classic_path = Path(os.environ["APPDATA"]) / "com.meetily.ai" / "meeting_minutes.sqlite"
+    if classic_path.is_file():
+        return classic_path
     packages_dir = Path(os.environ["LOCALAPPDATA"]) / "Packages"
     if packages_dir.is_dir():
         matches = sorted(packages_dir.glob("*/LocalCache/Roaming/com.meetily.ai/meeting_minutes.sqlite"))
         if matches:
             return matches[0]
-    return Path(os.environ["APPDATA"]) / "com.meetily.ai" / "meeting_minutes.sqlite"
+    return classic_path
 
 
 DB_PATH = _resolve_db_path()
