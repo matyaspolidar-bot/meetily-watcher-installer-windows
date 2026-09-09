@@ -50,15 +50,19 @@ def log(message: str) -> None:
 def run_powershell(script: str) -> str:
     result = subprocess.run(
         ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", script],
-        capture_output=True, text=True,
+        capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW,
     )
     return result.stdout.strip()
 
 
 def is_meetily_running() -> bool:
+    # creationflags=CREATE_NO_WINDOW: bez toho tenhle prikaz (spousteny z
+    # pythonw.exe bez vlastni konzole) kazdych POLL_INTERVAL_SECONDS otevre a
+    # hned zavre nove konzolove okno - na obrazovce to vypada jako nahodne
+    # problikavani.
     result = subprocess.run(
         ["tasklist", "/FI", "IMAGENAME eq meetily.exe"],
-        capture_output=True, text=True,
+        capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW,
     )
     return "meetily.exe" in result.stdout.lower()
 
@@ -89,7 +93,7 @@ def ask_and_maybe_record() -> None:
         log("Uživatel klikl Ano, spouštím click_meetily_record.ps1...")
         click_result = subprocess.run(
             ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(CLICK_SCRIPT)],
-            capture_output=True, text=True,
+            capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW,
         )
         log(
             f"Výsledek kliknutí: returncode={click_result.returncode} "

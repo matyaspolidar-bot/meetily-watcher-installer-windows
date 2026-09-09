@@ -222,7 +222,10 @@ function Stage-ScheduledTasks {
     # je dost "navzdy" v praxi a bezpecne v rozsahu.
     $watcherTrigger = New-ScheduledTaskTrigger -Once -At (Get-Date) `
         -RepetitionInterval (New-TimeSpan -Minutes 2) -RepetitionDuration (New-TimeSpan -Days 3650)
-    $watcherSettings = New-ScheduledTaskSettingsSet -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Minutes 30)
+    # -Hidden: bez toho python.exe (konzolova appka) kazdych 2 minuty na
+    # okamzik probliknout viditelnym cernym oknem, protoze uloha bezi v
+    # interaktivni relaci (LogonType Interactive).
+    $watcherSettings = New-ScheduledTaskSettingsSet -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Minutes 30) -Hidden
     Register-ScheduledTask -TaskName "MeetilyWatcher" -Action $watcherAction -Trigger $watcherTrigger `
         -Settings $watcherSettings -Principal $principal `
         -Description "Meetily Watcher - kontrola novych nahravek" | Out-Null
@@ -233,7 +236,7 @@ function Stage-ScheduledTasks {
     $promptAction = New-ScheduledTaskAction -Execute $pythonw -Argument "`"$promptScript`""
     $promptTrigger = New-ScheduledTaskTrigger -AtLogOn
     $promptSettings = New-ScheduledTaskSettingsSet -RestartCount 999 -RestartInterval (New-TimeSpan -Minutes 1) `
-        -ExecutionTimeLimit ([TimeSpan]::Zero)
+        -ExecutionTimeLimit ([TimeSpan]::Zero) -Hidden
     Register-ScheduledTask -TaskName "MeetilyLaunchPrompt" -Action $promptAction -Trigger $promptTrigger `
         -Settings $promptSettings -Principal $principal `
         -Description "Meetily Watcher - dialog Chcete zacit nahravat?" | Out-Null
