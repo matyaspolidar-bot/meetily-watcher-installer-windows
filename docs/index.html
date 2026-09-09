@@ -43,6 +43,9 @@ li{margin:.5rem 0;}
 .codebox-body{padding:1.1rem 1.3rem;overflow-x:auto;}
 .codebox code{background:none;padding:0;color:inherit;font-family:'SF Mono','Menlo',monospace;font-size:.85rem;line-height:1.55;white-space:pre;}
 
+.dl-btn{display:inline-block;background:var(--accent);color:#fff;font-weight:600;text-decoration:none;border-radius:10px;padding:.85rem 1.4rem;font-size:1rem;margin:.4rem 0 .2rem;transition:opacity .15s;}
+.dl-btn:hover{opacity:.88;}
+
 .note{background:var(--surface-2);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:.75rem 1.05rem;font-size:.85rem;margin:.9rem 0 1.3rem;color:var(--muted);}
 .note b{color:var(--text);}
 code.inline{background:var(--surface-2);border-radius:5px;padding:.1rem .4rem;font-family:'SF Mono','Menlo',monospace;font-size:.85em;}
@@ -56,7 +59,21 @@ footer{margin-top:3rem;padding-top:1.6rem;border-top:1px solid var(--line);color
   <h1>Meetily Watcher</h1>
   <p class="sub">Automatický přepis a diarizace schůzek (Whisper + rozpoznání mluvčích) běžící na pozadí. Instalace jedním příkazem. Hledáš Mac verzi? <a href="https://matyaspolidar-bot.github.io/meetily-watcher-installer/">Je tady</a>.</p>
 
-  <h2>1. Pošli odkaz Claude (vyžadován funkční Claude Code)</h2>
+  <h2>1. Stáhni instalátor a spusť ho (dvojklik)</h2>
+  <p>Jeden soubor, žádné kopírování příkazů. Stáhni si ho a poklikej na něj.</p>
+
+  <p><a class="dl-btn" href="Nainstalovat-Meetily.bat" download>⬇ Stáhnout Nainstalovat-Meetily.bat</a></p>
+
+  <ol>
+    <li>Otevři soubor ze složky Stažené soubory (dvojklik).</li>
+    <li>Prohlížeč nebo Windows se může zeptat, jestli si tímhle souborem jsi jistý ("Soubor může poškodit počítač" / "Windows chránil váš počítač") - klikni <b>Zachovat</b> / <b>Ponechat</b>, případně <b>Další informace → Přesto spustit</b>. Je to očekávané u každého staženého skriptu, ne jen u tohohle.</li>
+    <li>Objeví se okno Windows s dotazem na oprávnění správce - klikni <b>Ano</b>.</li>
+    <li>Otevře se černé okno a hned po něm uvítací okno s instrukcemi - to už tě instalace vede sama krok za krokem.</li>
+  </ol>
+
+  <div class="note">Nefunguje stažení/spuštění .bat souboru (firemní zásady, antivirus)? Použij některou z alternativ níže.</div>
+
+  <h2>Alternativa A: Pošli odkaz Claude (vyžadován funkční Claude Code)</h2>
   <p>Máš spuštěný Claude Code (s přístupem k terminálu na tomhle PC)? Zkopíruj zprávu níže a pošli mu ji přesně tak, jak je - repo obsahuje instrukce, které si Claude sám přečte a instalaci spustí za tebe.</p>
 
   <div class="codebox">
@@ -67,13 +84,10 @@ footer{margin-top:3rem;padding-top:1.6rem;border-top:1px solid var(--line);color
     <div class="codebox-body"><code id="claude-msg">naklonuj a nainstaluj https://github.com/matyaspolidar-bot/meetily-watcher-installer-windows</code></div>
   </div>
 
-  <div class="note">Musí to být Claude <b>Code</b> (s reálným přístupem k příkazové řádce) - ne Claude chat v prohlížeči nebo režim "jen klikání na obrazovku". Ty typy relací nemůžou příkazy spouštět a instalace by neproběhla. Nemáš Claude Code? Pokračuj krokem 2 níže (PowerShell).</div>
+  <div class="note">Musí to být Claude <b>Code</b> (s reálným přístupem k příkazové řádce) - ne Claude chat v prohlížeči nebo režim "jen klikání na obrazovku". Ty typy relací nemůžou příkazy spouštět a instalace by neproběhla.</div>
 
-  <h2>2. Nemáš Claude Code? Otevři PowerShell jako správce</h2>
-  <p>Klávesa <code class="inline">Windows</code> → napiš <code class="inline">PowerShell</code> → klikni pravým tlačítkem na "Windows PowerShell" → <b>Spustit jako správce</b>. Je to appka vestavěná přímo ve Windows, nic se nemusí instalovat.</p>
-
-  <h2>3. Zkopíruj a vlož tenhle příkaz</h2>
-  <p>Vlož ho do okna PowerShellu (klik pravým tlačítkem, nebo <code class="inline">Ctrl+V</code>) a stiskni Enter.</p>
+  <h2>Alternativa B: PowerShell ručně</h2>
+  <p>Klávesa <code class="inline">Windows</code> → napiš <code class="inline">PowerShell</code> → klikni pravým tlačítkem na "Windows PowerShell" → <b>Spustit jako správce</b>. Pak vlož tenhle příkaz (klik pravým tlačítkem, nebo <code class="inline">Ctrl+V</code>) a stiskni Enter.</p>
 
   <div class="codebox">
     <div class="codebox-head">
@@ -83,9 +97,9 @@ footer{margin-top:3rem;padding-top:1.6rem;border-top:1px solid var(--line);color
     <div class="codebox-body"><code id="install-cmd">irm https://matyaspolidar-bot.github.io/meetily-watcher-installer-windows/install.ps1 | iex</code></div>
   </div>
 
-  <div class="note">Tohle je bezpečné - vidíš přesně to samé, co je v <a href="install.ps1">install.ps1</a>, nic se neděje skrytě.</div>
+  <div class="note">Tohle je přesně to samé, co spouští i tlačítko výše - vidíš přesně to samé, co je v <a href="install.ps1">install.ps1</a>, nic se neděje skrytě.</div>
 
-  <h2>4. Co se bude dít dál (v tomto pořadí)</h2>
+  <h2>2. Co se bude dít dál (v tomto pořadí)</h2>
   <ol>
     <li>Windows se může párkrát zeptat na potvrzení <b>UAC okna</b> (instalace Pythonu/ffmpeg/appky) - vždy potvrď.</li>
     <li>3x se otevře prohlížeč na stránce Hugging Face - založení účtu, odsouhlasení licence modelů, vytvoření přístupového tokenu. Appka přesně napíše, co kde kliknout.</li>
