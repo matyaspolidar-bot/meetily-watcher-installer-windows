@@ -62,6 +62,10 @@ json.dump(merged, open(out, 'w', encoding='utf-8'), ensure_ascii=False)
     & $Py $diarizeScript $Audio $diarizationJson
     if ($LASTEXITCODE -ne 0) { throw "Diarizace selhala (kod $LASTEXITCODE)." }
 
+    # voice_profiles.py musi byt vedle transcribe.py, aby ho slo naimportovat
+    # (Python automaticky prida slozku spousteneho skriptu do sys.path).
+    Copy-Item -Path (Join-Path $WorkDir "voice_profiles.py") -Destination $Tmp -Force
+
     Write-Host "-> Prepisuji po usecich mluvcich (faster-whisper, jazyk se pozna zvlast pro kazdy usek)..."
     $transcribeScript = Join-Path $Tmp "transcribe.py"
     @'
@@ -72,6 +76,7 @@ import sys
 import tempfile
 
 from faster_whisper import WhisperModel
+from voice_profiles import identify
 
 END_PADDING_SECONDS = 0.3  # diarizacni hranice nekdy urizne posledni slovo vety
 
@@ -93,12 +98,15 @@ with tempfile.TemporaryDirectory() as tmpdir:
         )
         result_segments, info = model.transcribe(slice_path)
         text = " ".join(s.text.strip() for s in result_segments).strip()
+        # Automaticke rozpoznani podle hlasu (voice_profiles.py) - beze
+        # zaznamenanych profilu vraci None a zustane genericky SPEAKER_00/01.
+        recognized_name = identify(slice_path)
         if text:
             merged_out.append({
                 'start': start,
                 'end': end,
                 'text': text,
-                'speaker': speaker,
+                'speaker': recognized_name or speaker,
                 'language': info.language,
             })
 

@@ -84,6 +84,29 @@ internetu (Mark of the Web) tiše zabila, instalace skončila okamžitě s
 místo toho stahují bootstrap skript do souboru a spouští ho přes `&`/`-File`
 - funkčně stejné, jen to nevypadá jako živý download-cradle řetězec.
 
+## Automatické rozpoznání mluvčího podle hlasu (nepovinné)
+
+`voice_profiles.py` umí přiřadit reálné jméno mluvčímu úplně automaticky,
+bez ručního vyplňování `_speakers.json` - použije stejný embedding model,
+jaký diarizace stejně mimochodem stahuje (`pyannote/wespeaker-voxceleb-
+resnet34-LM`), porovná hlas každého mluvčího s dopředu zaznamenanými
+profily kolegů a při dostatečné podobnosti (práh 0.75, konzervativně -
+raději neznámý mluvčí než špatně přiřazené jméno) rovnou dosadí jméno
+místo `SPEAKER_00`/`01`/... Ověřeno end-to-end na reálném testu (dvě různé
+nahrávky stejného člověka, druhá správně automaticky pojmenovaná).
+
+Jednorázová registrace (každý konzultant sám za sebe, stačí krátká 10-30s
+čistá nahrávka vlastního hlasu, libovolný formát - m4a, mp4, wav, cokoliv
+umí přečíst ffmpeg):
+
+```
+cd %USERPROFILE%\whisper-setup
+whisperx-env\Scripts\python.exe voice_profiles.py enroll "Jan Novak" cesta\k\nahravce.m4a
+```
+
+Bez zaregistrovaného hlasu se všechno chová přesně jako předtím
+(`SPEAKER_00`/`01` + ruční `apply_speaker_names.py`) - nic se nerozbije.
+
 ## Návrh jmen účastníků z firemního kalendáře (nepovinné)
 
 `teams_attendees.py` umí po zpracování nahrávky navrhnout jména podle toho,
@@ -143,6 +166,7 @@ src/payload/apply_speaker_names.py        # aplikuje ručně vyplněná jména m
 src/payload/transcribe_meeting.ps1        # diarizace + přepis jednoho audio souboru
 src/payload/teams_attendees.py            # nepovinny navrh jmen z kalendare (Microsoft Graph)
 src/payload/teams_config.example.json     # sablona konfigurace pro teams_attendees.py
+src/payload/voice_profiles.py             # automaticke rozpoznani mluvciho podle hlasu
 ```
 
 ## Poznámka k diakritice

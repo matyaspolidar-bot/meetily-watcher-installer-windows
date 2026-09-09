@@ -189,7 +189,8 @@ function Stage-CopyPayloadScripts {
     param([Parameter(Mandatory)][string]$PayloadDir)
     $files = @(
         "meetily_watcher.py", "meetily_autowatch.py", "export_transcript.py",
-        "apply_speaker_names.py", "transcribe_meeting.ps1", "teams_attendees.py"
+        "apply_speaker_names.py", "transcribe_meeting.ps1", "teams_attendees.py",
+        "voice_profiles.py"
     )
     foreach ($f in $files) {
         Copy-Item -Path (Join-Path $PayloadDir $f) -Destination $Script:WhisperSetupDir -Force
