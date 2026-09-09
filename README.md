@@ -40,18 +40,20 @@ místo na disku, zámek proti souběžnému běhu), `winget` instalace Python +
 ffmpeg, jeden venv s `whisperx`/`pyannote-audio`/`faster-whisper`, HF
 onboarding, automatická instalace appky Meetily (`.msi`, tichý `msiexec`),
 port watcher skriptů (`meetily_watcher.py`, `meetily_autowatch.py`,
-`export_transcript.py`, `apply_speaker_names.py`, `meetily_launch_prompt.py`),
-registrace dvou úloh v Task Scheduleru (běh na pozadí).
+`export_transcript.py`, `apply_speaker_names.py`), registrace úlohy v Task
+Scheduleru (běh na pozadí).
 
-Test doběhl až po instalaci appky Meetily a registraci obou Task Scheduler
-úloh (po opravě elevace výše). `DB_PATH` je teď ověřený proti reálné databázi.
+Test doběhl až po instalaci appky Meetily a registraci Task Scheduler úlohy
+(po opravě elevace výše). `DB_PATH` je teď ověřený proti reálné databázi.
 Zbývá neověřené:
-- `src/payload/click_meetily_record.ps1` - klikání na tlačítko "Nahrávat" přes
-  Windows UI Automation (heuristika podle velikosti tlačítka, převzatá z Mac
-  AppleScriptu - Windows struktura appky není ověřená).
 - Celý end-to-end běh watcher pipeline na skutečné nahrávce (přepis +
   diarizace + zápis zpět do Meetily databáze) - zatím otestováno jen to, že
   scheduled task dojede bez pádu na prázdné DB, ne na reálné nahrávce.
+
+Dialog "Chcete začít nahrávat?" (`meetily_launch_prompt.py` +
+`click_meetily_record.ps1`, automatické klikání na tlačítko Nahrávat) byl
+odstraněn - konzultanti appku spouští a nahrávají ručně sami, watcher jen
+zpracovává hotové nahrávky na pozadí.
 
 Landing page (`docs/index.html`) má tři cesty instalace: dvojklik na
 `docs/Nainstalovat-Meetily.zip` (primární, doporučená pro netechnické
@@ -74,7 +76,6 @@ staženého skriptu bez placeného code-signing certifikátu.
 | `osascript display dialog` | `System.Windows.Forms.MessageBox` / `Microsoft.VisualBasic.Interaction.InputBox` |
 | `hdiutil` mount DMG | silent `.msi`/`.exe` install |
 | `pgrep` | `Get-Process` |
-| System Events UI-scripting (klik na "Nahrávat") | Windows UI Automation (`System.Windows.Automation`) |
 | `dscl` admin check | `Get-LocalGroupMember -Group Administrators` |
 | `df -g` | `Get-PSDrive` |
 | MLX transkripce (Apple-only) | `faster-whisper` (whisperx na něm staví) - jeden venv místo dvou |
@@ -93,10 +94,8 @@ src/lib/stages.ps1                        # idempotentní instalační kroky
 src/lib/hf_onboarding.ps1                 # HuggingFace účet/licence/token flow
 src/payload/meetily_watcher.py            # zpracuje jeden meeting (přepis+diarizace)
 src/payload/meetily_autowatch.py          # periodická kontrola nových nahrávek (Task Scheduler)
-src/payload/meetily_launch_prompt.py      # dialog "Chcete začít nahrávat?" při startu appky
 src/payload/export_transcript.py          # export do sdílené složky + mapování jmen mluvčích
 src/payload/apply_speaker_names.py        # aplikuje ručně vyplněná jména mluvčích
-src/payload/click_meetily_record.ps1      # klik na tlačítko nahrávání (UI Automation)
 src/payload/transcribe_meeting.ps1        # diarizace + přepis jednoho audio souboru
 ```
 

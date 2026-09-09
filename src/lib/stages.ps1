@@ -189,8 +189,7 @@ function Stage-CopyPayloadScripts {
     param([Parameter(Mandatory)][string]$PayloadDir)
     $files = @(
         "meetily_watcher.py", "meetily_autowatch.py", "export_transcript.py",
-        "apply_speaker_names.py", "meetily_launch_prompt.py",
-        "click_meetily_record.ps1", "transcribe_meeting.ps1"
+        "apply_speaker_names.py", "transcribe_meeting.ps1"
     )
     foreach ($f in $files) {
         Copy-Item -Path (Join-Path $PayloadDir $f) -Destination $Script:WhisperSetupDir -Force
@@ -206,11 +205,8 @@ function Stage-ScheduledTasks {
     if (-not $python -or -not (Test-Path $python)) {
         Invoke-FailDialog "Nenasel jsem Python 3.12 pro registraci uloh na pozadi."
     }
-    $pythonw = $python -replace "python\.exe$", "pythonw.exe"
-    if (-not (Test-Path $pythonw)) { $pythonw = $python }
 
     $watcherScript = Join-Path $Script:WhisperSetupDir "meetily_autowatch.py"
-    $promptScript = Join-Path $Script:WhisperSetupDir "meetily_launch_prompt.py"
     $principal = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType Interactive
 
     # Watcher - kontrola novych nahravek kazde 2 minuty (analogie StartInterval).
@@ -231,17 +227,9 @@ function Stage-ScheduledTasks {
         -Description "Meetily Watcher - kontrola novych nahravek" | Out-Null
     Write-Info "Task Scheduler (MeetilyWatcher): nainstalovano a naplanovano"
 
-    # Launch-prompt - bezi porad na pozadi, restartuje se pri padu (analogie KeepAlive).
+    # Dialog "Chcete zacit nahravat?" (MeetilyLaunchPrompt) byl odstranen -
+    # pokud z predchoziho behu jeste existuje, odregistrujeme ho.
     Unregister-ScheduledTask -TaskName "MeetilyLaunchPrompt" -Confirm:$false -ErrorAction SilentlyContinue
-    $promptAction = New-ScheduledTaskAction -Execute $pythonw -Argument "`"$promptScript`""
-    $promptTrigger = New-ScheduledTaskTrigger -AtLogOn
-    $promptSettings = New-ScheduledTaskSettingsSet -RestartCount 999 -RestartInterval (New-TimeSpan -Minutes 1) `
-        -ExecutionTimeLimit ([TimeSpan]::Zero) -Hidden
-    Register-ScheduledTask -TaskName "MeetilyLaunchPrompt" -Action $promptAction -Trigger $promptTrigger `
-        -Settings $promptSettings -Principal $principal `
-        -Description "Meetily Watcher - dialog Chcete zacit nahravat?" | Out-Null
-    Start-ScheduledTask -TaskName "MeetilyLaunchPrompt"
-    Write-Info "Task Scheduler (MeetilyLaunchPrompt): nainstalovano a spusteno"
 }
 
 function Test-Verify {
@@ -254,14 +242,6 @@ function Test-Verify {
 
     $watcherTask = Get-ScheduledTask -TaskName "MeetilyWatcher" -ErrorAction SilentlyContinue
     if (-not $watcherTask) { Write-Warn "uloha MeetilyWatcher neexistuje"; $ok = $false }
-
-    $promptRunning = $false
-    for ($i = 0; $i -lt 30; $i++) {
-        $promptTask = Get-ScheduledTask -TaskName "MeetilyLaunchPrompt" -ErrorAction SilentlyContinue
-        if ($promptTask -and $promptTask.State -eq "Running") { $promptRunning = $true; break }
-        Start-Sleep -Seconds 1
-    }
-    if (-not $promptRunning) { Write-Warn "hlidac dialogu pri zapnuti nebezi"; $ok = $false }
 
     return $ok
 }
