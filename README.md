@@ -23,13 +23,16 @@ zatím opravené:
   žádný UAC dialog nevyvolá a prostě selže. Oprava: `Start-Process msiexec.exe`
   teď v `stages.ps1` běží s `-Verb RunAs`.
 - `DB_PATH` v `meetily_watcher.py` (odhad `%APPDATA%\com.meetily.ai\...` podle
-  Tauri konvence) byl špatně - appka je nainstalovaná jako MSIX balíček, takže
-  Windows její soubory virtualizuje do
-  `%LOCALAPPDATA%\Packages\<PackageFamilyName>\LocalCache\Roaming\com.meetily.ai\...`.
-  `PackageFamilyName` má náhodný hash-suffix různý pro každou instalaci, takže
-  `meetily_watcher.py` teď cestu hledá dynamicky (glob přes `Packages/*/...`)
-  místo hardcodované hodnoty; MeetilyWatcher scheduled task kvůli tomu padal
-  na každém běhu (`sqlite3.OperationalError: unable to open database file`).
+  Tauri konvence) nejdřív padal - první test byl na stroji, kde se
+  předpokládalo, že appka běží jako MSIX balíček (Windows by pak soubory
+  virtualizoval do `%LOCALAPPDATA%\Packages\<PackageFamilyName>\LocalCache\
+  Roaming\com.meetily.ai\...`). `meetily_watcher.py` teď zkouší tuhle
+  variantu nejdřív (glob přes `Packages/*/...`, `PackageFamilyName` má
+  náhodný hash-suffix různý pro každou instalaci) a pak spadne zpátky na
+  původní `%APPDATA%\com.meetily.ai\...`. Na opakovaných reálných testech
+  (včetně čisté reinstalace 09/2026) se appka chová jako klasická
+  (non-MSIX) instalace a používá se právě ten fallback - MSIX větev zůstává
+  jen jako pojistka pro jiný způsob instalace/budoucí verzi appky.
 - Po úspěšné instalaci appky padal `Start-Process "meetily"` (bare příkaz
   není na PATH) terminující výjimkou i přes `-ErrorAction SilentlyContinue`
   (`Start-Process` tohle ignoruje u file-not-found) - opraveno na plnou cestu

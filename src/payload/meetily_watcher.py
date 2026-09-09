@@ -17,18 +17,21 @@ from pathlib import Path
 from export_transcript import export_transcript
 
 def _resolve_db_path() -> Path:
-    """Overeno na realnem Windows stroji (09/2026): Meetily je nainstalovana
-    jako MSIX balicek, takze Windows jeji souborovy pristup presmeruje mimo
-    plain %APPDATA% do virtualizovane slozky pod
-    %LOCALAPPDATA%\\Packages\\<PackageFamilyName>\\LocalCache\\Roaming\\...
-    PackageFamilyName obsahuje nahodny hash-suffix ruzny pro kazdou instalaci,
+    """Na realnych Windows strojich (opakovane overeno 09/2026, vcetne
+    cerstve instalace) Meetily bezi jako klasicka (non-MSIX) appka a
+    databaze je na obycejne ceste %APPDATA%\\com.meetily.ai\\... - proto je
+    tenhle fallback druhy radek, ne prvni. Puvodne se cekalo, ze appka pobezi
+    jako MSIX balicek (Windows by pak soubory virtualizoval do
+    %LOCALAPPDATA%\\Packages\\<PackageFamilyName>\\LocalCache\\Roaming\\...) -
+    to se na zadnem testovanem stroji zatim nepotvrdilo, ale kontrola
+    zustava pro pripad jineho zpusobu instalace/budouci verze appky.
+    PackageFamilyName ma nahodny hash-suffix ruzny pro kazdou instalaci,
     takze cestu hledame dynamicky misto hardcodovani konkretni hodnoty."""
     packages_dir = Path(os.environ["LOCALAPPDATA"]) / "Packages"
     if packages_dir.is_dir():
         matches = sorted(packages_dir.glob("*/LocalCache/Roaming/com.meetily.ai/meeting_minutes.sqlite"))
         if matches:
             return matches[0]
-    # Fallback na puvodni odhad (nebalena/non-MSIX instalace Meetily).
     return Path(os.environ["APPDATA"]) / "com.meetily.ai" / "meeting_minutes.sqlite"
 
 
