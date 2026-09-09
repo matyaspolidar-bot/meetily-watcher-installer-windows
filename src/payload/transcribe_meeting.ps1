@@ -43,7 +43,13 @@ df = dp(audio)
 records = df[['start', 'end', 'speaker']].to_dict('records')
 
 merged = []
-GAP_SECONDS = 1.0
+# 1.0s puvodne roztrhalo i normalni pauzy pri souvislem mluveni jednoho
+# cloveka na spoustu kratkych (1-3s) useku, ktere Whisper bez okolniho
+# kontextu prepisoval jako naprosty nesmysl (jine jazyky/halucinace) -
+# overeno na realnem testu, kde 68s souvisleho cteni rozsekalo na 6 kousku
+# a nejkratsi z nich vysly jako anglicka/ruska hatmatilka. Pri prepisu
+# CELEHO souboru najednou byl vysledek spravne cesky a smysluplny.
+GAP_SECONDS = 2.5
 for r in records:
     if merged and merged[-1]['speaker'] == r['speaker'] and r['start'] - merged[-1]['end'] < GAP_SECONDS:
         merged[-1]['end'] = r['end']
