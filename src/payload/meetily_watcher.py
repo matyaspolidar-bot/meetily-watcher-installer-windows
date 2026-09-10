@@ -96,10 +96,15 @@ def backup_existing_transcript(conn, meeting_id, folder_path):
 
 
 def run_pipeline(audio_path, out_json):
+    # CREATE_NO_WINDOW: bez toho powershell.exe na okamzik otevre viditelne
+    # konzolove okno a prebere fokus - stejny problem jako u MeetilyWatcher
+    # (viz stages.ps1), ktery shazoval hry bezici v exclusive fullscreenu.
+    creationflags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
     subprocess.run(
         ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
          str(TRANSCRIBE_SCRIPT), str(audio_path), str(out_json)],
         check=True,
+        creationflags=creationflags,
     )
     return json.loads(out_json.read_text(encoding="utf-8"))
 

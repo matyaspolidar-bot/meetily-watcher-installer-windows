@@ -211,22 +211,32 @@ function Stage-ScheduledTasks {
     if (-not $python -or -not (Test-Path $python)) {
         Invoke-FailDialog "Nenasel jsem Python 3.12 pro registraci uloh na pozadi."
     }
+    # pythonw.exe (bezokenni varianta vedle python.exe v kazde CPython
+    # instalaci), ne python.exe - viz komentar u $watcherAction nize.
+    $pythonw = Join-Path (Split-Path $python -Parent) "pythonw.exe"
+    if (-not (Test-Path $pythonw)) {
+        Invoke-FailDialog "Nenasel jsem pythonw.exe vedle $python."
+    }
 
     $watcherScript = Join-Path $Script:WhisperSetupDir "meetily_autowatch.py"
     $principal = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType Interactive
 
     # Watcher - kontrola novych nahravek kazde 2 minuty (analogie StartInterval).
     Unregister-ScheduledTask -TaskName "MeetilyWatcher" -Confirm:$false -ErrorAction SilentlyContinue
-    $watcherAction = New-ScheduledTaskAction -Execute $python -Argument "`"$watcherScript`""
+    $watcherAction = New-ScheduledTaskAction -Execute $pythonw -Argument "`"$watcherScript`""
     # [TimeSpan]::MaxValue (~10 milionu dni) se serializuje do Task Scheduler
     # XML jako P99999999DT23H59M59S, coz je mimo povoleny rozsah schematu
     # (overeno na realnem Windows - presne tahle hodnota v chybe). 10 let
     # je dost "navzdy" v praxi a bezpecne v rozsahu.
     $watcherTrigger = New-ScheduledTaskTrigger -Once -At (Get-Date) `
         -RepetitionInterval (New-TimeSpan -Minutes 2) -RepetitionDuration (New-TimeSpan -Days 3650)
-    # -Hidden: bez toho python.exe (konzolova appka) kazdych 2 minuty na
-    # okamzik probliknout viditelnym cernym oknem, protoze uloha bezi v
-    # interaktivni relaci (LogonType Interactive).
+    # -Hidden jen skryje ulohu ze seznamu v Task Scheduleru, NEskryje okno
+    # spusteneho procesu - to je duvod, proc vyse pouzivame $pythonw
+    # (pythonw.exe), ne $python (python.exe). Konzolova appka spustena pres
+    # Task Scheduler v interaktivni relaci (LogonType Interactive) na okamzik
+    # probliknout viditelnym cernym oknem kazdych 2 minuty i s -Hidden - v
+    # praxi overeno, ze tohle bliknuti/prebrani fokusu shazuje hry bezici v
+    # exclusive fullscreenu (Valorant s Vanguard anticheatem) zpet na plochu.
     $watcherSettings = New-ScheduledTaskSettingsSet -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Minutes 30) -Hidden
     Register-ScheduledTask -TaskName "MeetilyWatcher" -Action $watcherAction -Trigger $watcherTrigger `
         -Settings $watcherSettings -Principal $principal `
